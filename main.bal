@@ -81,9 +81,9 @@ service / on new http:Listener(port) {
             }
 
             map<json> customClaims = {
-                    "scope": scopes.toString(),
-                    "role": authenticatedUser.role
-                };
+                "scope": scopes.toString(),
+                "role": authenticatedUser.role
+            };
 
             jwt:IssuerConfig issuerConfig = {
                 username: authenticatedUser.username,
@@ -113,19 +113,20 @@ service / on new http:Listener(port) {
         }
     }
 
-    resource function get albums(@http:Header string authorization) returns ApiResponse|http:Unauthorized|http:Forbidden {
-        // Check if the authorization header is present
-        if (authorization == "" || !authorization.startsWith("Bearer ") || authorization.length() < 8) {
-            return http:UNAUTHORIZED;
-        }
-
-        // Extract the token from the authorization header
-        string token = authorization.substring(7);
-
-        if (validateJwt(token) == false) {
-            return http:FORBIDDEN;
-        }
-
+    @http:ResourceConfig {
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    issuer: "wso2",
+                    signatureConfig: {
+                        certFile: "./resources/public.crt"
+                    }
+                },
+                scopes: ["albums:read"]
+            }
+        ]
+    }
+    resource function get albums() returns ApiResponse {
         ApiResponse response = {
             success: true,
             message: "Albums retrieved successfully",
@@ -137,6 +138,19 @@ service / on new http:Listener(port) {
         return response;
     }
 
+    @http:ResourceConfig {
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    issuer: "wso2",
+                    signatureConfig: {
+                        certFile: "./resources/public.crt"
+                    }
+                },
+                scopes: ["albums:read"]
+            }
+        ]
+    }
     resource function get albums/[string id]() returns ApiResponse|http:NotFound {
         Album? album = albums[id];
 
@@ -155,8 +169,33 @@ service / on new http:Listener(port) {
         return response;
     }
 
-    resource function post albums(@http:Payload Album newAlbum) returns ApiResponse|http:BadRequest|http:InternalServerError {
+    @http:ResourceConfig {
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    issuer: "wso2",
+                    signatureConfig: {
+                        certFile: "./resources/public.crt"
+                    }
+                },
+                scopes: ["albums:create"]
+            }
+        ]
+    }
+    resource function post albums(@http:Header string authorization, @http:Payload Album newAlbum) returns ApiResponse|http:BadRequest|http:InternalServerError|http:Unauthorized|http:Forbidden {
         do {
+            // Check if the authorization header is present
+            if (authorization == "" || !authorization.startsWith("Bearer ") || authorization.length() < 8) {
+                return http:UNAUTHORIZED;
+            }
+
+            // Extract the token from the authorization header
+            string token = authorization.substring(7);
+
+            if (validateJwt(token) == false) {
+                return http:FORBIDDEN;
+            }
+
             Album? existingAlbum = albums[newAlbum.id];
 
             if (existingAlbum is Album) {
@@ -177,8 +216,33 @@ service / on new http:Listener(port) {
         }
     }
 
-    resource function put albums/[string id](@http:Payload Album updatedAlbum) returns ApiResponse|http:NotFound|http:InternalServerError {
+    @http:ResourceConfig {
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    issuer: "wso2",
+                    signatureConfig: {
+                        certFile: "./resources/public.crt"
+                    }
+                },
+                scopes: ["albums:update"]
+            }
+        ]
+    }
+    resource function put albums/[string id](@http:Header string authorization, @http:Payload Album updatedAlbum) returns ApiResponse|http:NotFound|http:InternalServerError|http:Unauthorized|http:Forbidden {
         do {
+            // Check if the authorization header is present
+            if (authorization == "" || !authorization.startsWith("Bearer ") || authorization.length() < 8) {
+                return http:UNAUTHORIZED;
+            }
+
+            // Extract the token from the authorization header
+            string token = authorization.substring(7);
+
+            if (validateJwt(token) == false) {
+                return http:FORBIDDEN;
+            }
+
             Album? existingAlbum = albums[id];
 
             if (existingAlbum is ()) {
@@ -201,8 +265,33 @@ service / on new http:Listener(port) {
         }
     }
 
-    resource function delete albums/[string id]() returns ApiResponse|http:NotFound|http:InternalServerError {
+    @http:ResourceConfig {
+        auth: [
+            {
+                jwtValidatorConfig: {
+                    issuer: "wso2",
+                    signatureConfig: {
+                        certFile: "./resources/public.crt"
+                    }
+                },
+                scopes: ["albums:delete"]
+            }
+        ]
+    }
+    resource function delete albums/[string id](@http:Header string authorization) returns ApiResponse|http:NotFound|http:InternalServerError|http:Unauthorized|http:Forbidden {
         do {
+            // Check if the authorization header is present
+            if (authorization == "" || !authorization.startsWith("Bearer ") || authorization.length() < 8) {
+                return http:UNAUTHORIZED;
+            }
+
+            // Extract the token from the authorization header
+            string token = authorization.substring(7);
+
+            if (validateJwt(token) == false) {
+                return http:FORBIDDEN;
+            }
+
             Album? existingAlbum = albums[id];
 
             if (existingAlbum is ()) {
