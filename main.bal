@@ -39,6 +39,23 @@ table<User> key(id) users = table [
     {id: "2", username: "user", password: "user", role: "user"}
 ];
 
+jwt:ValidatorConfig validatorConfig = {
+    issuer: "wso2",
+    signatureConfig: {
+        certFile: "./resources/public.crt"
+    }
+};
+
+function validateJwt(string token) returns boolean {
+    jwt:Payload|jwt:Error validationResult = jwt:validate(token, validatorConfig);
+
+    if validationResult is jwt:Error {
+        return false;
+    }
+
+    return true;
+}
+
 service / on new http:Listener(port) {
     resource function post login(@http:Payload record {|string username; string password;|} credentials) returns ApiResponse|http:NotFound|http:InternalServerError {
         User? authenticatedUser = ();
@@ -56,9 +73,10 @@ service / on new http:Listener(port) {
 
         do {
             string[] scopes = [];
+
             if (authenticatedUser.role == "admin") {
-                scopes = ["albums:read", "albums:write"];
-            } else if (authenticatedUser.role == "user") {
+                scopes = ["albums:read", "albums:create", "albums:update", "albums:delete"];
+            } else {
                 scopes = ["albums:read"];
             }
 
@@ -68,16 +86,16 @@ service / on new http:Listener(port) {
                 };
 
             jwt:IssuerConfig issuerConfig = {
-                    username: authenticatedUser.username,
-                    issuer: "wso2",
-                    expTime: 3600,
-                    customClaims: customClaims,
-                    signatureConfig: {
-                        config: {
-                            keyFile: "./resources/private.key"
-                        }
+                username: authenticatedUser.username,
+                issuer: "wso2",
+                expTime: 3600,
+                customClaims: customClaims,
+                signatureConfig: {
+                    config: {
+                        keyFile: "./resources/private.key"
                     }
-                };
+                }
+            };
 
             string jwt = check jwt:issue(issuerConfig);
 
@@ -95,7 +113,19 @@ service / on new http:Listener(port) {
         }
     }
 
-    resource function get albums() returns ApiResponse {
+    resource function get albums(@http:Header string authorization) returns ApiResponse|http:Unauthorized|http:Forbidden {
+        // Check if the authorization header is present
+        if (authorization == "" || !authorization.startsWith("Bearer ") || authorization.length() < 8) {
+            return http:UNAUTHORIZED;
+        }
+
+        // Extract the token from the authorization header
+        string token = authorization.substring(7);
+
+        if (validateJwt(token) == false) {
+            return http:FORBIDDEN;
+        }
+
         ApiResponse response = {
             success: true,
             message: "Albums retrieved successfully",
@@ -162,6 +192,30 @@ service / on new http:Listener(port) {
                 message: "Album updated successfully",
                 payload: {
                     data: updatedAlbum
+                }
+            };
+
+            return response;
+        } on fail {
+            return http:INTERNAL_SERVER_ERROR;
+        }
+    }
+
+    resource function delete albums/[string id]() returns ApiResponse|http:NotFound|http:InternalServerError {
+        do {
+            Album? existingAlbum = albums[id];
+
+            if (existingAlbum is ()) {
+                return http:NOT_FOUND;
+            }
+
+            _ = albums.remove(id);
+
+            ApiResponse response = {
+                success: true,
+                message: "Album deleted successfully",
+                payload: {
+                    data: existingAlbum
                 }
             };
 

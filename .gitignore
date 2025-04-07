@@ -14,3 +14,4 @@ Config.toml
 # Keystore and Truststore files
 # These files are used to store private keys and certificates.
 *.key
+*.crt
