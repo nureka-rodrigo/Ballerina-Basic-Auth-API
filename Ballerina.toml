@@ -1,0 +1,8 @@
+[package]
+org = "nureka"
+name = "Ballerina_Basic_Auth_API"
+version = "0.1.0"
+distribution = "2201.12.0"
+
+[build-options]
+observabilityIncluded = true
