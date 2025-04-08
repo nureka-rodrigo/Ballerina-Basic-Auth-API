@@ -46,38 +46,6 @@ jwt:ValidatorConfig validatorConfig = {
     }
 };
 
-function isHeaderPresent(string header) returns boolean {
-    if (header == "" || !header.startsWith("Bearer ") || header.length() < 8) {
-        return false;
-    }
-
-    return true;
-}
-
-function isTokenValid(string token) returns boolean {
-    jwt:Payload|jwt:Error validationResult = jwt:validate(token, validatorConfig);
-
-    if validationResult is jwt:Error {
-        return false;
-    }
-
-    return true;
-}
-
-// @http:ServiceConfig {
-//     auth: [
-//         {
-//             jwtValidatorConfig: {
-//                 issuer: "wso2",
-//                 signatureConfig: {
-//                     certFile: "./resources/public.crt"
-//                 },
-//                 scopeKey: "scope"
-//             },
-//             scopes: ["admin", "user"]
-//         }
-//     ]
-// }
 service / on new http:Listener(port) {
     resource function post login(@http:Payload record {|string username; string password;|} credentials) returns ApiResponse|http:NotFound|http:InternalServerError {
         User? authenticatedUser = ();
@@ -208,18 +176,6 @@ service / on new http:Listener(port) {
     }
     resource function post albums(@http:Header string authorization, @http:Payload Album newAlbum) returns ApiResponse|http:BadRequest|http:InternalServerError|http:Unauthorized|http:Forbidden {
         do {
-            // Check if the authorization header is present
-            if (isHeaderPresent(authorization) == false) {
-                return http:UNAUTHORIZED;
-            }
-
-            // Extract the token from the authorization header
-            string token = authorization.substring(7);
-
-            if (isTokenValid(token) == false) {
-                return http:FORBIDDEN;
-            }
-
             Album? existingAlbum = albums[newAlbum.id];
 
             if (existingAlbum is Album) {
@@ -256,18 +212,6 @@ service / on new http:Listener(port) {
     }
     resource function put albums/[string id](@http:Header string authorization, @http:Payload Album updatedAlbum) returns ApiResponse|http:NotFound|http:InternalServerError|http:Unauthorized|http:Forbidden {
         do {
-            // Check if the authorization header is present
-            if (isHeaderPresent(authorization) == false) {
-                return http:UNAUTHORIZED;
-            }
-
-            // Extract the token from the authorization header
-            string token = authorization.substring(7);
-
-            if (isTokenValid(token) == false) {
-                return http:FORBIDDEN;
-            }
-
             Album? existingAlbum = albums[id];
 
             if (existingAlbum is ()) {
@@ -306,18 +250,6 @@ service / on new http:Listener(port) {
     }
     resource function delete albums/[string id](@http:Header string authorization) returns ApiResponse|http:NotFound|http:InternalServerError|http:Unauthorized|http:Forbidden {
         do {
-            // Check if the authorization header is present
-            if (isHeaderPresent(authorization) == false) {
-                return http:UNAUTHORIZED;
-            }
-
-            // Extract the token from the authorization header
-            string token = authorization.substring(7);
-
-            if (isTokenValid(token) == false) {
-                return http:FORBIDDEN;
-            }
-
             Album? existingAlbum = albums[id];
 
             if (existingAlbum is ()) {
