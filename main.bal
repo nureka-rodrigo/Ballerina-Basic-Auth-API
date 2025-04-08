@@ -157,7 +157,7 @@ service / on new http:Listener(port) {
             }
         ]
     }
-    resource function post albums(@http:Header string authorization, @http:Payload Album newAlbum) returns ApiResponse|http:BadRequest|http:InternalServerError|http:Unauthorized|http:Forbidden {
+    resource function post albums(@http:Header string authorization, @http:Payload Album newAlbum) returns ApiResponse|http:BadRequest|http:InternalServerError {
         do {
             Album? existingAlbum = albums[newAlbum.id];
 
@@ -187,7 +187,7 @@ service / on new http:Listener(port) {
             }
         ]
     }
-    resource function put albums/[string id](@http:Header string authorization, @http:Payload Album updatedAlbum) returns ApiResponse|http:NotFound|http:InternalServerError|http:Unauthorized|http:Forbidden {
+    resource function put albums/[string id](@http:Header string authorization, @http:Payload Album updatedAlbum) returns ApiResponse|http:NotFound|http:InternalServerError {
         do {
             Album? existingAlbum = albums[id];
 
@@ -219,7 +219,7 @@ service / on new http:Listener(port) {
             }
         ]
     }
-    resource function delete albums/[string id](@http:Header string authorization) returns ApiResponse|http:NotFound|http:InternalServerError|http:Unauthorized|http:Forbidden {
+    resource function delete albums/[string id](@http:Header string authorization) returns ApiResponse|http:NotFound|http:InternalServerError {
         do {
             Album? existingAlbum = albums[id];
 
