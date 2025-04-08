@@ -46,7 +46,15 @@ jwt:ValidatorConfig validatorConfig = {
     }
 };
 
-function validateJwt(string token) returns boolean {
+function isHeaderPresent(string header) returns boolean {
+    if (header == "" || !header.startsWith("Bearer ") || header.length() < 8) {
+        return false;
+    }
+
+    return true;
+}
+
+function isTokenValid(string token) returns boolean {
     jwt:Payload|jwt:Error validationResult = jwt:validate(token, validatorConfig);
 
     if validationResult is jwt:Error {
@@ -56,6 +64,20 @@ function validateJwt(string token) returns boolean {
     return true;
 }
 
+// @http:ServiceConfig {
+//     auth: [
+//         {
+//             jwtValidatorConfig: {
+//                 issuer: "wso2",
+//                 signatureConfig: {
+//                     certFile: "./resources/public.crt"
+//                 },
+//                 scopeKey: "scope"
+//             },
+//             scopes: ["admin", "user"]
+//         }
+//     ]
+// }
 service / on new http:Listener(port) {
     resource function post login(@http:Payload record {|string username; string password;|} credentials) returns ApiResponse|http:NotFound|http:InternalServerError {
         User? authenticatedUser = ();
@@ -75,14 +97,13 @@ service / on new http:Listener(port) {
             string[] scopes = [];
 
             if (authenticatedUser.role == "admin") {
-                scopes = ["albums:read", "albums:create", "albums:update", "albums:delete"];
+                scopes = ["admin"];
             } else {
-                scopes = ["albums:read"];
+                scopes = ["user"];
             }
 
             map<json> customClaims = {
-                "scope": scopes.toString(),
-                "role": authenticatedUser.role
+                "scope": scopes.length() == 1 ? scopes[0] : scopes.toString()
             };
 
             jwt:IssuerConfig issuerConfig = {
@@ -120,9 +141,10 @@ service / on new http:Listener(port) {
                     issuer: "wso2",
                     signatureConfig: {
                         certFile: "./resources/public.crt"
-                    }
+                    },
+                    scopeKey: "scope"
                 },
-                scopes: ["albums:read"]
+                scopes: ["admin", "user"]
             }
         ]
     }
@@ -145,9 +167,10 @@ service / on new http:Listener(port) {
                     issuer: "wso2",
                     signatureConfig: {
                         certFile: "./resources/public.crt"
-                    }
+                    },
+                    scopeKey: "scope"
                 },
-                scopes: ["albums:read"]
+                scopes: ["admin", "user"]
             }
         ]
     }
@@ -176,23 +199,24 @@ service / on new http:Listener(port) {
                     issuer: "wso2",
                     signatureConfig: {
                         certFile: "./resources/public.crt"
-                    }
+                    },
+                    scopeKey: "scope"
                 },
-                scopes: ["albums:create"]
+                scopes: ["admin"]
             }
         ]
     }
     resource function post albums(@http:Header string authorization, @http:Payload Album newAlbum) returns ApiResponse|http:BadRequest|http:InternalServerError|http:Unauthorized|http:Forbidden {
         do {
             // Check if the authorization header is present
-            if (authorization == "" || !authorization.startsWith("Bearer ") || authorization.length() < 8) {
+            if (isHeaderPresent(authorization) == false) {
                 return http:UNAUTHORIZED;
             }
 
             // Extract the token from the authorization header
             string token = authorization.substring(7);
 
-            if (validateJwt(token) == false) {
+            if (isTokenValid(token) == false) {
                 return http:FORBIDDEN;
             }
 
@@ -223,23 +247,24 @@ service / on new http:Listener(port) {
                     issuer: "wso2",
                     signatureConfig: {
                         certFile: "./resources/public.crt"
-                    }
+                    },
+                    scopeKey: "scope"
                 },
-                scopes: ["albums:update"]
+                scopes: ["admin"]
             }
         ]
     }
     resource function put albums/[string id](@http:Header string authorization, @http:Payload Album updatedAlbum) returns ApiResponse|http:NotFound|http:InternalServerError|http:Unauthorized|http:Forbidden {
         do {
             // Check if the authorization header is present
-            if (authorization == "" || !authorization.startsWith("Bearer ") || authorization.length() < 8) {
+            if (isHeaderPresent(authorization) == false) {
                 return http:UNAUTHORIZED;
             }
 
             // Extract the token from the authorization header
             string token = authorization.substring(7);
 
-            if (validateJwt(token) == false) {
+            if (isTokenValid(token) == false) {
                 return http:FORBIDDEN;
             }
 
@@ -272,23 +297,24 @@ service / on new http:Listener(port) {
                     issuer: "wso2",
                     signatureConfig: {
                         certFile: "./resources/public.crt"
-                    }
+                    },
+                    scopeKey: "scope"
                 },
-                scopes: ["albums:delete"]
+                scopes: ["admin"]
             }
         ]
     }
     resource function delete albums/[string id](@http:Header string authorization) returns ApiResponse|http:NotFound|http:InternalServerError|http:Unauthorized|http:Forbidden {
         do {
             // Check if the authorization header is present
-            if (authorization == "" || !authorization.startsWith("Bearer ") || authorization.length() < 8) {
+            if (isHeaderPresent(authorization) == false) {
                 return http:UNAUTHORIZED;
             }
 
             // Extract the token from the authorization header
             string token = authorization.substring(7);
 
-            if (validateJwt(token) == false) {
+            if (isTokenValid(token) == false) {
                 return http:FORBIDDEN;
             }
 
