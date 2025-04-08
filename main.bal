@@ -39,11 +39,12 @@ table<User> key(id) users = table [
     {id: "2", username: "user", password: "user", role: "user"}
 ];
 
-jwt:ValidatorConfig validatorConfig = {
+final http:JwtValidatorConfig JWT_VALIDATOR_CONFIG = {
     issuer: "wso2",
     signatureConfig: {
         certFile: "./resources/public.crt"
-    }
+    },
+    scopeKey: "scope"
 };
 
 service / on new http:Listener(port) {
@@ -89,12 +90,12 @@ service / on new http:Listener(port) {
             string jwt = check jwt:issue(issuerConfig);
 
             ApiResponse response = {
-                    success: true,
-                    message: "Login successful",
-                    payload: {
-                        token: jwt
-                    }
-                };
+                success: true,
+                message: "Login successful",
+                payload: {
+                    token: jwt
+                }
+            };
 
             return response;
         } on fail {
@@ -105,13 +106,7 @@ service / on new http:Listener(port) {
     @http:ResourceConfig {
         auth: [
             {
-                jwtValidatorConfig: {
-                    issuer: "wso2",
-                    signatureConfig: {
-                        certFile: "./resources/public.crt"
-                    },
-                    scopeKey: "scope"
-                },
+                jwtValidatorConfig: JWT_VALIDATOR_CONFIG,
                 scopes: ["admin", "user"]
             }
         ]
@@ -131,13 +126,7 @@ service / on new http:Listener(port) {
     @http:ResourceConfig {
         auth: [
             {
-                jwtValidatorConfig: {
-                    issuer: "wso2",
-                    signatureConfig: {
-                        certFile: "./resources/public.crt"
-                    },
-                    scopeKey: "scope"
-                },
+                jwtValidatorConfig: JWT_VALIDATOR_CONFIG,
                 scopes: ["admin", "user"]
             }
         ]
@@ -163,13 +152,7 @@ service / on new http:Listener(port) {
     @http:ResourceConfig {
         auth: [
             {
-                jwtValidatorConfig: {
-                    issuer: "wso2",
-                    signatureConfig: {
-                        certFile: "./resources/public.crt"
-                    },
-                    scopeKey: "scope"
-                },
+                jwtValidatorConfig: JWT_VALIDATOR_CONFIG,
                 scopes: ["admin"]
             }
         ]
@@ -199,13 +182,7 @@ service / on new http:Listener(port) {
     @http:ResourceConfig {
         auth: [
             {
-                jwtValidatorConfig: {
-                    issuer: "wso2",
-                    signatureConfig: {
-                        certFile: "./resources/public.crt"
-                    },
-                    scopeKey: "scope"
-                },
+                jwtValidatorConfig: JWT_VALIDATOR_CONFIG,
                 scopes: ["admin"]
             }
         ]
@@ -237,13 +214,7 @@ service / on new http:Listener(port) {
     @http:ResourceConfig {
         auth: [
             {
-                jwtValidatorConfig: {
-                    issuer: "wso2",
-                    signatureConfig: {
-                        certFile: "./resources/public.crt"
-                    },
-                    scopeKey: "scope"
-                },
+                jwtValidatorConfig: JWT_VALIDATOR_CONFIG,
                 scopes: ["admin"]
             }
         ]
