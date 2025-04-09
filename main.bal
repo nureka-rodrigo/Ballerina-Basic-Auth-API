@@ -1,52 +1,6 @@
 import ballerina/http;
 import ballerina/jwt;
 
-configurable int port = 8080;
-
-type Album readonly & record {|
-    string id;
-    string title;
-    string artist;
-    decimal price;
-|};
-
-type User readonly & record {|
-    string id;
-    string username;
-    string password;
-    string role;
-|};
-
-type ApiResponse record {|
-    boolean success;
-    string message;
-    record {|
-        string token?;
-        record {}[]|record {}|string|int|boolean data?;
-    |} payload?;
-|};
-
-table<Album> key(id) albums = table [
-    {id: "1", title: "Blue Train", artist: "John Coltrane", price: 56.99},
-    {id: "2", title: "Jeru", artist: "Gerry Mulligan", price: 17.99},
-    {id: "3", title: "Sarah Vaughan and Clifford Brown", artist: "Sarah Vaughan", price: 39.99},
-    {id: "4", title: "The Best of Ella Fitzgerald", artist: "Ella Fitzgerald", price: 29.99},
-    {id: "5", title: "The Great Jazz Trio", artist: "The Great Jazz Trio", price: 49.99}
-];
-
-table<User> key(id) users = table [
-    {id: "1", username: "admin", password: "admin", role: "admin"},
-    {id: "2", username: "user", password: "user", role: "user"}
-];
-
-final http:JwtValidatorConfig JWT_VALIDATOR_CONFIG = {
-    issuer: "wso2",
-    signatureConfig: {
-        certFile: "./resources/public.crt"
-    },
-    scopeKey: "scope"
-};
-
 service / on new http:Listener(port) {
     resource function post login(@http:Payload record {|string username; string password;|} credentials) returns ApiResponse|http:NotFound|http:InternalServerError {
         User? authenticatedUser = ();
@@ -66,9 +20,9 @@ service / on new http:Listener(port) {
             string[] scopes = [];
 
             if (authenticatedUser.role == "admin") {
-                scopes = ["admin"];
+                scopes = SCOPE_ADMIN;
             } else {
-                scopes = ["user"];
+                scopes = SCOPE_USER;
             }
 
             map<json> customClaims = {
@@ -107,7 +61,7 @@ service / on new http:Listener(port) {
         auth: [
             {
                 jwtValidatorConfig: JWT_VALIDATOR_CONFIG,
-                scopes: ["admin", "user"]
+                scopes: SCOPE_ALL
             }
         ]
     }
@@ -127,7 +81,7 @@ service / on new http:Listener(port) {
         auth: [
             {
                 jwtValidatorConfig: JWT_VALIDATOR_CONFIG,
-                scopes: ["admin", "user"]
+                scopes: SCOPE_ALL
             }
         ]
     }
@@ -153,7 +107,7 @@ service / on new http:Listener(port) {
         auth: [
             {
                 jwtValidatorConfig: JWT_VALIDATOR_CONFIG,
-                scopes: ["admin"]
+                scopes: SCOPE_ADMIN
             }
         ]
     }
@@ -183,7 +137,7 @@ service / on new http:Listener(port) {
         auth: [
             {
                 jwtValidatorConfig: JWT_VALIDATOR_CONFIG,
-                scopes: ["admin"]
+                scopes: SCOPE_ADMIN
             }
         ]
     }
@@ -215,7 +169,7 @@ service / on new http:Listener(port) {
         auth: [
             {
                 jwtValidatorConfig: JWT_VALIDATOR_CONFIG,
-                scopes: ["admin"]
+                scopes: SCOPE_ADMIN
             }
         ]
     }

@@ -305,6 +305,7 @@ dependencies = [
 	{org = "ballerinai", name = "observe"}
 ]
 modules = [
-	{org = "nureka", packageName = "Ballerina_Basic_Auth_API", moduleName = "Ballerina_Basic_Auth_API"}
+	{org = "nureka", packageName = "Ballerina_Basic_Auth_API", moduleName = "Ballerina_Basic_Auth_API"},
+	{org = "nureka", packageName = "Ballerina_Basic_Auth_API", moduleName = "Ballerina_Basic_Auth_API.util"}
 ]
 
