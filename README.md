@@ -1,4 +1,4 @@
-# Ballerina JWT Authentication API
+# Ballerina-JWT-Auth-API
 
 This repository contains a RESTful API built with Ballerina that demonstrates JWT-based authentication and authorization. The API manages a collection of music albums with different access levels based on user roles.
 
